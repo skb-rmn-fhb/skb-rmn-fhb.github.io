@@ -36,11 +36,11 @@
                     }
 
                     // Add marker to the respective layer
-                    const marker = L.marker([point.Latitude, point.Longitude])
+                    const marker = L.marker([point.latitude, point.longitude])
                         .bindPopup(`
                             <b>Layer:</b> ${point["informality_layer"]}<br>
                             <b>Region:</b> ${point["region"]}<br>
-                            <b>Contact:</b> ${point["contact_information_e_mail_instagram_etc_"]}<br>
+                            <b>Contact:</b> ${point["contact_information_email_instagram_etc"]}<br>
                             <b>Data Collector:</b> ${point["data_collector"]}
                         `);
                     layers[layerName].addLayer(marker);

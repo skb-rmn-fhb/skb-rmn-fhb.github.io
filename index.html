@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaflet Map with Layers</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([53.080420, 8.795589], 14);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Define layers
+        const layers = {};
+
+        // Load the JSON data
+        fetch('output_file.json')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(point => {
+                    const layerName = point["informality_layer"];
+                    if (!layers[layerName]) {
+                        layers[layerName] = L.layerGroup().addTo(map);
+                    }
+
+                    // Add marker to the respective layer
+                    const marker = L.marker([point.Latitude, point.Longitude])
+                        .bindPopup(`
+                            <b>Layer:</b> ${point["informality_layer"]}<br>
+                            <b>Region:</b> ${point["region"]}<br>
+                            <b>Contact:</b> ${point["contact_information_e_mail_instagram_etc_"]}<br>
+                            <b>Data Collector:</b> ${point["data_collector"]}
+                        `);
+                    layers[layerName].addLayer(marker);
+                });
+
+                // Add layer control
+                L.control.layers(null, layers).addTo(map);
+            })
+            .catch(error => console.error('Error loading JSON:', error));
+    </script>
+</body>
+</html>

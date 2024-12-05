@@ -22,8 +22,13 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // Define layers
+        // Define layers and color mapping
         const layers = {};
+        const layerColors = {
+            "Demonstrations": "red",
+            "Graffities": "blue",
+            "Other Layer": "green" // Add more layers and colors as needed
+        };
 
         // Load the JSON data
         fetch('out.json')
@@ -35,14 +40,22 @@
                         layers[layerName] = L.layerGroup().addTo(map);
                     }
 
+                    // Determine marker color
+                    const color = layerColors[layerName] || "gray"; // Default to gray if layer is unknown
+
                     // Add marker to the respective layer
-                    const marker = L.marker([point.Latitude, point.Longitude])
-                        .bindPopup(`
-                            <b>Layer:</b> ${point["informality_layer"]}<br>
-                            <b>Region:</b> ${point["region"]}<br>
-                            <b>Contact:</b> ${point["contact_information_email_instagram_etc"]}<br>
-                            <b>Data Collector:</b> ${point["data_collector"]}
-                        `);
+                    const marker = L.circleMarker([point.latitude, point.longitude], {
+                        color: color,
+                        radius: 8,
+                        fillColor: color,
+                        fillOpacity: 0.8
+                    }).bindPopup(`
+                        <b>Layer:</b> ${point["informality_layer"]}<br>
+                        <b>Region:</b> ${point["region"]}<br>
+                        <b>Contact:</b> ${point["contact_information_email_instagram_etc"]}<br>
+                        <b>Data Collector:</b> ${point["data_collector"]}
+                    `);
+
                     layers[layerName].addLayer(marker);
                 });
 

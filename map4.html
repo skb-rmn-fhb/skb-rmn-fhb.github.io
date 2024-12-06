@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Leaflet Map with Layers and Images</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -11,89 +12,105 @@
         }
     </style>
 </head>
+
 <body>
     <div id="map"></div>
     <script>
-    // Initialize the map
-    const map = L.map('map').setView([53.080420, 8.795589], 14);
+        // Possible extensions to check
+        const possibleExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.heic'];
 
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    // Define layers
-    const layers = {};
-
-    // Predefine colors for layers
-    const predefinedColors = [
-        "red", "blue", "green", "orange", "purple", 
-        "yellow", "cyan", "magenta", "lime", "pink", 
-        "teal", "brown", "black", "gray"
-    ];
-    const layerColors = {};
-
-    // Default image path
-    const defaultImage = 'imgs/default.png';
-
-    // Helper function to check if an image exists
-    function imageExists(imageUrl) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => resolve(true);
-            img.onerror = () => resolve(false);
-            img.src = imageUrl;
-        });
-    }
-
-    // Load the JSON data
-    fetch('out.json')
-        .then(response => response.json())
-        .then(data => {
-            let colorIndex = 0; // Track color assignments
-
-            data.forEach(async point => {
-                const layerName = point["informality_layer"];
-
-                // Assign a color to the layer if not already assigned
-                if (!layerColors[layerName]) {
-                    layerColors[layerName] = predefinedColors[colorIndex] || `#${Math.floor(Math.random()*16777215).toString(16)}`;
-                    colorIndex++;
+        // Helper function to find the correct image path with extension
+        async function getImageWithExtension(imageName) {
+            for (const ext of possibleExtensions) {
+                const imagePath = `imgs/${imageName}${ext}`;
+                if (await imageExists(imagePath)) {
+                    return imagePath;
                 }
+            }
+            return defaultImage; // Return the default image if none match
+        }
 
-                // Check if the layer group exists; if not, create it
-                if (!layers[layerName]) {
-                    layers[layerName] = L.layerGroup().addTo(map);
-                }
+        // Initialize the map
+        const map = L.map('map').setView([53.080420, 8.795589], 14);
 
-                // Determine image path
-                const imageName = point["final_data_code_image_name"];
-                const imagePath = `imgs/${imageName}.heic`;
-                const imageToUse = await imageExists(imagePath) ? imagePath : defaultImage;
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
 
-                // Add marker with assigned color and image in popup
-                const marker = L.circleMarker([point.latitude, point.longitude], {
-                    color: layerColors[layerName],
-                    radius: 8,
-                    fillColor: layerColors[layerName],
-                    fillOpacity: 0.8
-                }).bindPopup(`
-                    <b>Layer:</b> ${point["informality_layer"]}<br>
-                    <b>Region:</b> ${point["region"]}<br>
-                    <b>Contact:</b> ${point["contact_information_email_instagram_etc"]}<br>
-                    <b>GeoCoordinate(Lat,Lng):</b> ${point["latitude"]} , ${point["longitude"]} <br>
-                    <b>Data Collector:</b> ${point["data_collector"]}<br>
-                    <img src="${imageToUse}" alt="Marker Image" style="width:100%; max-width:300px;" />
-                `);
+        // Define layers
+        const layers = {};
 
-                // Add marker to the respective layer
-                layers[layerName].addLayer(marker);
+        // Predefine colors for layers
+        const predefinedColors = [
+            "red", "blue", "green", "orange", "purple",
+            "yellow", "cyan", "magenta", "lime", "pink",
+            "teal", "brown", "black", "gray"
+        ];
+        const layerColors = {};
+
+        // Default image path
+        const defaultImage = 'imgs/notfound.jpg';
+
+        // Helper function to check if an image exists
+        function imageExists(imageUrl) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve(true);
+                img.onerror = () => resolve(false);
+                img.src = imageUrl;
             });
+        }
 
-            // Add layer control
-            L.control.layers(null, layers).addTo(map);
-        })
-        .catch(error => console.error('Error loading JSON:', error));
+        // Load the JSON data
+        fetch('out.json')
+            .then(response => response.json())
+            .then(data => {
+                let colorIndex = 0; // Track color assignments
+
+                // Inside the JSON data loop
+                data.forEach(async point => {
+                    const layerName = point["informality_layer"];
+
+                    // Assign a color to the layer if not already assigned
+                    if (!layerColors[layerName]) {
+                        layerColors[layerName] = predefinedColors[colorIndex] || `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+                        colorIndex++;
+                    }
+
+                    // Check if the layer group exists; if not, create it
+                    if (!layers[layerName]) {
+                        layers[layerName] = L.layerGroup().addTo(map);
+                    }
+
+                    // Determine image path with extension
+                    const imageName = point["final_data_code_image_name"];
+                    const imageToUse = await getImageWithExtension(imageName);
+
+                    // Add marker with assigned color and image in popup
+                    const marker = L.circleMarker([point.latitude, point.longitude], {
+                        color: layerColors[layerName],
+                        radius: 8,
+                        fillColor: layerColors[layerName],
+                        fillOpacity: 0.8
+                    }).bindPopup(`
+        <b>Layer:</b> ${point["informality_layer"]}<br>
+        <b>Region:</b> ${point["region"]}<br>
+        <b>Contact:</b> ${point["contact_information_email_instagram_etc"]}<br>
+        <b>GeoCoordinate(Lat,Lng):</b> ${point["latitude"]} , ${point["longitude"]} <br>
+        <b>Data Collector:</b> ${point["data_collector"]}<br>
+        <img src="${imageToUse}" alt="Marker Image" style="width:100%; max-width:300px;" />
+    `);
+
+                    // Add marker to the respective layer
+                    layers[layerName].addLayer(marker);
+                });
+
+                // Add layer control
+                L.control.layers(null, layers).addTo(map);
+            })
+            .catch(error => console.error('Error loading JSON:', error));
     </script>
 </body>
+
 </html>

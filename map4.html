@@ -68,7 +68,7 @@
 
                 // Determine image path
                 const imageName = point["final_data_code_image_name"];
-                const imagePath = `imgs/${imageName}`;
+                const imagePath = `imgs/${imageName}.heic`;
                 const imageToUse = await imageExists(imagePath) ? imagePath : defaultImage;
 
                 // Add marker with assigned color and image in popup
